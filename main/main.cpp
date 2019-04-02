@@ -11,21 +11,21 @@
 #include "esp_task_wdt.h"
 
 AudioPlayer audio_player;
-
-#if 0
 extern const uint8_t test_vgm_start[] asm("_binary_test_vgm_start");
 extern const uint8_t test_vgm_end[]   asm("_binary_test_vgm_end");
+
+#if 0
 
 void buttons_start_audio(void)
 {
 //    audio_player.play( &melodyMonkeyIslandP );
-    audio_player.playVGM( test_vgm_start, test_vgm_end - test_vgm_start );
 }
 #endif
 
 static void main_task(void *pvParameter)
 {
     audio_player.begin();
+    audio_player.playVGM( test_vgm_start, test_vgm_end - test_vgm_start );
     for(;;)
     {
         audio_player.update();

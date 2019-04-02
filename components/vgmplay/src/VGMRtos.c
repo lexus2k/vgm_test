@@ -90,17 +90,11 @@ static vgm_progmem_t fileinfo = {};
 	return ResVal;
 }*/
 
-int vgm_play_data(const uint8_t *data, int size)
-{
-	UINT8 result;
-	WAVE_16BS *sampleBuffer;
-	UINT32 bufferedLength;
-//	char *AppName;
-//	char* AppPathPtr;
-//	const char *StrPtr;
-//	UINT8 CurPath;
-//	UINT32 ChrPos;
+static	WAVE_16BS *sampleBuffer;
+static	UINT32 bufferedLength;
 
+int vgm_play_start(const uint8_t *data, int size)
+{
 	fileinfo.data = data;
 	fileinfo.size = size;
 	VGMPlay_Init();
@@ -125,8 +119,6 @@ int vgm_play_data(const uint8_t *data, int size)
 		return 1;
 	}
 
-	PlayVGM();
-
 	sampleBuffer = (WAVE_16BS*)malloc(SAMPLESIZE * SampleRate);
 	if (sampleBuffer == NULL)
 	{
@@ -134,22 +126,62 @@ int vgm_play_data(const uint8_t *data, int size)
 		return 1;
 	}
 
-	while (!EndPlay) {
-		UINT32 bufferSize = SampleRate;
-		bufferedLength = FillBuffer(sampleBuffer, bufferSize);
-		if (bufferedLength) {
-//			UINT32 numberOfSamples;
-//			UINT32 currentSample;
-//			const UINT16* sampleData;
+	PlayVGM();
+	bufferedLength = 0;
+	return 0;
+}
 
-//			sampleData = (UINT16*)sampleBuffer;
-//			numberOfSamples = SAMPLESIZE * bufferedLength / 0x02;
-//			for (currentSample = 0x00; currentSample < numberOfSamples; currentSample++) {
-//				fputBE16(sampleData[currentSample], outputFile);
-//			}
-		}
+int vgm_play_data(void *outBuffer, int size)
+{
+	static UINT32 currentSample = 0;
+	UINT32 index = 0;
+	UINT8 result;
+	size = size / SAMPLESIZE * 2;
+//	char *AppName;
+//	char* AppPathPtr;
+//	const char *StrPtr;
+//	UINT8 CurPath;
+//	UINT32 ChrPos;
+	if (EndPlay)
+	{
+		return 0;
 	}
 
+	while (1)
+	{
+	if ( !bufferedLength )
+	{
+		UINT32 bufferSize = SampleRate;
+		bufferedLength = FillBuffer(sampleBuffer, bufferSize);
+		currentSample = 0;
+	}
+
+	if ( bufferedLength )
+	{
+		UINT32 numberOfSamples;
+		const UINT16* sampleData = (UINT16*)sampleBuffer;
+		UINT16* outSampleData = (UINT16*)outBuffer;
+		sampleData = (UINT16*)sampleBuffer;
+
+		while ((currentSample != SAMPLESIZE * bufferedLength / 2) && size )
+		{
+			outSampleData[index] = sampleData[currentSample];
+			currentSample++;
+			index++;
+			size--;
+		}
+	}
+	if (!size)
+	{
+		break;
+	}
+
+	}
+	return index * SAMPLESIZE / 2;
+}
+
+int vgm_play_stop(void)
+{
 	StopVGM();
 
 	CloseVGMFile();

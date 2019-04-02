@@ -436,7 +436,7 @@ void VGMPlay_Init(void)
 	CHIP_OPTS* TempCOpt;
 	CAUD_ATTR* TempCAud;
 	
-	SampleRate = 44100;
+	SampleRate = 8000;
 	FadeTime = 5000;
 	PauseTime = 0;
 	

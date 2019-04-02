@@ -39,7 +39,7 @@ void AudioPlayer::playVGM(const uint8_t *buffer, int size)
     }
     AudioGmeDecoder* decoder = new AudioGmeDecoder();
     // TODO get format from m_output
-    decoder->set_format(16000, 16);
+    decoder->set_format(8000, 16);
     decoder->set_melody( buffer, size );
     m_decoder = decoder;
 }
