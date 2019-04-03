@@ -80,6 +80,7 @@ bool AudioPlayer::update()
             size = m_buffer + BUFFER_SIZE - m_write_pos;
         }
         size = (size >> 2) << 2;
+//        if ( size > BUFFER_SIZE / 2) size = BUFFER_SIZE / 2;
         if ( size )
         {
             size = m_decoder->decode( m_write_pos, size );
