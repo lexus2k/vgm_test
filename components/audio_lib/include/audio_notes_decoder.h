@@ -17,7 +17,7 @@ public:
 
 private:
     const NixieMelody* m_melody = nullptr;
-    uint32_t m_rate = 8000;
+    uint32_t m_rate = 16000;
     uint8_t m_bps = 16;
     const uint8_t *m_position = nullptr;
     uint16_t m_note_samples_left = 0;

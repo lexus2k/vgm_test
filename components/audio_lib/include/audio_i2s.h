@@ -12,6 +12,8 @@ public:
     AudioI2S() = default;
     ~AudioI2S() = default;
 
+    void set_frequency(uint32_t frequency);
+
     void begin();
     /**
      * If nullptr is specified, I2S clears DMA buffer

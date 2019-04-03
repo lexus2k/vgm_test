@@ -16,6 +16,6 @@ public:
     int decode(uint8_t* buffer, int max_size) override;
 private:
     Music_Emu* m_emu = nullptr;
-    uint32_t m_rate = 8000;
+    uint32_t m_rate = 16000;
     uint8_t m_bps = 16;
 };

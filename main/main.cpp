@@ -29,8 +29,7 @@ static void main_task(void *pvParameter)
     for(;;)
     {
         audio_player.update();
-        vTaskDelay(2);
-        fprintf(stderr, "===== check ====\n");
+        vTaskDelay(3);
 //        esp_task_wdt_reset();
     }
 

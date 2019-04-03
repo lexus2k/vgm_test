@@ -22,7 +22,9 @@ public:
 private:
     AudioI2S m_output;
     AudioDecoder* m_decoder = nullptr;
+    uint32_t m_frequency = 16000;
     uint8_t* m_buffer = nullptr;
+    uint8_t* m_write_pos = nullptr;
     uint8_t* m_player_pos = nullptr;
-    size_t  m_size = 0;
+    bool m_end_detected = false;
 };

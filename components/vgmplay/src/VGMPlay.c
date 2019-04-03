@@ -294,7 +294,7 @@ void* PlayingThread(void* Arg);
 
 
 // Options Variables
-UINT32 SampleRate;	// Note: also used by some sound cores to determinate the chip sample rate
+UINT32 SampleRate = 0;	// Note: also used by some sound cores to determinate the chip sample rate
 
 UINT32 VGMMaxLoop;
 UINT32 VGMPbRate;	// in Hz, ignored if this value or VGM's lngRate Header value is 0
@@ -435,11 +435,14 @@ void VGMPlay_Init(void)
 	UINT8 CurChn;
 	CHIP_OPTS* TempCOpt;
 	CAUD_ATTR* TempCAud;
-	
-	SampleRate = 8000;
+
+	if ( SampleRate == 0 )
+	{
+		SampleRate = 8000;
+	}
 	FadeTime = 5000;
 	PauseTime = 0;
-	
+
 	HardStopOldVGMs = 0x00;
 	FadeRAWLog = false;
 	VolumeLevel = 1.0f;

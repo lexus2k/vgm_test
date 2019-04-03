@@ -8,17 +8,24 @@
 #include "driver/i2s.h"
 #include "esp_adc_cal.h"
 
+//static uint32_t m_frequency = 8000;
+static uint32_t m_frequency = 16000;
+void AudioI2S::set_frequency(uint32_t frequency)
+{
+    m_frequency = frequency;
+}
+
 void AudioI2S::begin()
 {
     i2s_config_t i2s_config{};
     i2s_config.mode = static_cast<i2s_mode_t>(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN);
-    i2s_config.sample_rate = 16000;
+    i2s_config.sample_rate = m_frequency;
     i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
     i2s_config.channel_format = I2S_CHANNEL_FMT_ALL_RIGHT;
     i2s_config.communication_format = static_cast<i2s_comm_format_t>(I2S_COMM_FORMAT_I2S_MSB);
     i2s_config.intr_alloc_flags = 0; //ESP_INTR_FLAG_LEVEL1;
     i2s_config.dma_buf_count = 8;
-    i2s_config.dma_buf_len = 64;
+    i2s_config.dma_buf_len = 128;
     i2s_config.use_apll = false;
     esp_err_t err = i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
     if (err != ESP_OK)
@@ -27,7 +34,7 @@ void AudioI2S::begin()
     }
 //    i2s_set_pin(I2S_NUM_0, NULL);
     i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN);
-    i2s_set_sample_rates(I2S_NUM_0, 16000);
+    i2s_set_sample_rates(I2S_NUM_0, m_frequency);
     i2s_zero_dma_buffer( I2S_NUM_0 );
 }
 
