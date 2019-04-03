@@ -72,6 +72,14 @@ bool AudioPlayer::update()
         // some critical error happened
         return false;
     }
+    else
+    {
+        for(int i=0; i<written; i++)
+        {
+            fprintf( stderr, "%02X ", m_player_pos[i] );
+        }
+        fprintf( stderr, "\n" );
+    }
     m_player_pos += written;
     m_size -= written;
     return true;
