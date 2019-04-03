@@ -90,8 +90,9 @@ static vgm_progmem_t fileinfo = {};
 	return ResVal;
 }*/
 
-static	WAVE_16BS *sampleBuffer;
-static	UINT32 bufferedLength;
+static WAVE_16BS *sampleBuffer;
+static UINT32 maxBufferSamples;
+static UINT32 bufferedSamples;
 
 int vgm_play_start(const uint8_t *data, int size)
 {
@@ -119,7 +120,8 @@ int vgm_play_start(const uint8_t *data, int size)
 		return 1;
 	}
 
-	sampleBuffer = (WAVE_16BS*)malloc(SAMPLESIZE * SampleRate);
+	maxBufferSamples = SampleRate / 1;
+	sampleBuffer = (WAVE_16BS*)malloc(SAMPLESIZE * maxBufferSamples);
 	if (sampleBuffer == NULL)
 	{
 		fprintf(stderr, "vgm2pcm: error: failed to allocate %u bytes of memory\n", SAMPLESIZE * SampleRate);
@@ -127,7 +129,7 @@ int vgm_play_start(const uint8_t *data, int size)
 	}
 
 	PlayVGM();
-	bufferedLength = 0;
+	bufferedSamples = 0;
 	return 0;
 }
 
@@ -149,26 +151,29 @@ int vgm_play_data(void *outBuffer, int size)
 
 	while (1)
 	{
-	if ( !bufferedLength )
+	if ( !bufferedSamples )
 	{
-		UINT32 bufferSize = SampleRate;
-		bufferedLength = FillBuffer(sampleBuffer, bufferSize);
+		bufferedSamples = FillBuffer(sampleBuffer, maxBufferSamples);
 		currentSample = 0;
 	}
 
-	if ( bufferedLength )
+	if ( bufferedSamples )
 	{
 		UINT32 numberOfSamples;
 		const UINT16* sampleData = (UINT16*)sampleBuffer;
 		UINT16* outSampleData = (UINT16*)outBuffer;
 		sampleData = (UINT16*)sampleBuffer;
 
-		while ((currentSample != SAMPLESIZE * bufferedLength / 2) && size )
+		while ((currentSample != SAMPLESIZE * bufferedSamples / 2) && size )
 		{
 			outSampleData[index] = sampleData[currentSample];
 			currentSample++;
 			index++;
 			size--;
+		}
+		if ( currentSample == SAMPLESIZE * bufferedSamples / 2 )
+		{
+			bufferedSamples = 0;
 		}
 	}
 	if (!size)

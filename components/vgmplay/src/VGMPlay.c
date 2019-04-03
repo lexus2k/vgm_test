@@ -572,7 +572,7 @@ void VGMPlay_Init2(void)
 		mixerOpen(&hmixer, 0x00, 0x00, 0x00, 0x00);
 		GetMixerControl();
 #endif
-		
+
 		if (WINNT_MODE)
 		{
 			if (OpenPortTalk())
@@ -582,19 +582,19 @@ void VGMPlay_Init2(void)
 #ifdef MIXER_MUTING
 		hmixer = open("/dev/mixer", O_RDWR);
 #endif
-		
+
 		if (OpenPortTalk())
 			return;
 #endif
 	}
-	
+
 	StreamBufs[0x00] = (INT32*)malloc(SMPL_BUFSIZE * sizeof(INT32));
 	StreamBufs[0x01] = (INT32*)malloc(SMPL_BUFSIZE * sizeof(INT32));
-	
+
 	if (CHIP_SAMPLE_RATE <= 0)
 		CHIP_SAMPLE_RATE = SampleRate;
 	PlayingMode = 0xFF;
-	
+
 	return;
 }
 
@@ -603,7 +603,7 @@ void VGMPlay_Deinit(void)
 	UINT8 CurChip;
 	UINT8 CurCSet;
 	CHIP_OPTS* TempCOpt;
-	
+
 	if (FMPort)
 	{
 #ifdef MIXER_MUTING
@@ -614,10 +614,10 @@ void VGMPlay_Deinit(void)
 #endif
 #endif
 	}
-	
+
 	free(StreamBufs[0x00]);	StreamBufs[0x00] = NULL;
 	free(StreamBufs[0x01]);	StreamBufs[0x01] = NULL;
-	
+
 	for (CurCSet = 0x00; CurCSet < 0x02; CurCSet ++)
 	{
 		for (CurChip = 0x00; CurChip < CHIP_COUNT; CurChip ++)
@@ -877,10 +877,9 @@ void PlayVGM(void)
 	UINT8 CurChip;
 	UINT8 FMVal;
 	INT32 TempSLng;
-	
+
 	if (PlayingMode != 0xFF)
 		return;
-	
 	//PausePlay = false;
 	FadePlay = false;
 	MasterVol = 1.0f;
@@ -889,7 +888,7 @@ void PlayVGM(void)
 	FadeStart = 0;
 	ForceVGMExec = true;
 	PauseThread = true;
-	
+
 	// FM Check
 	FMVal = 0x00;
 	if (FMPort)
@@ -899,7 +898,7 @@ void PlayVGM(void)
 		{
 			if (! GetChipClock(&VGMHead, CurChip, NULL))
 				continue;
-			
+
 			// supported chips are:
 			//	SN76496 (0x00, special behaviour), YM2413 (0x01)
 			//	YM3812 (0x09), YM3526 (0x0A), Y8950 (0x0B), YMF262 (0x0C)
@@ -911,12 +910,12 @@ void PlayVGM(void)
 			else
 				FMVal |= 0x01;
 		}
-		
+
 		if (! FMForce)
 		{
 			if (FMVal & 0x01)	// one or more software emulators used?
 				FMVal &= ~0x02;	// use only software emulation
-			
+
 			if (FMVal == 0x04)
 				FMVal = 0x01;	// FM SN76496 emulaton is bad
 			else if ((FMVal & 0x05) == 0x05)
@@ -940,7 +939,7 @@ void PlayVGM(void)
 		break;
 	}
 	UseFM = (PlayingMode > 0x00);
-	
+
 	if (VGMHead.bytVolumeModifier <= VOLUME_MODIF_WRAP)
 		TempSLng = VGMHead.bytVolumeModifier;
 	else if (VGMHead.bytVolumeModifier == (VOLUME_MODIF_WRAP + 0x01))
@@ -956,7 +955,7 @@ void PlayVGM(void)
 			VolumeLevelM *= -FMVol;
 	}
 	FinalVol = VolumeLevelM;
-	
+
 	if (! VGMMaxLoop)
 	{
 		VGMMaxLoopM = 0x00;
@@ -966,7 +965,7 @@ void PlayVGM(void)
 		TempSLng = (VGMMaxLoop * VGMHead.bytLoopModifier + 0x08) / 0x10 - VGMHead.bytLoopBase;
 		VGMMaxLoopM = (TempSLng >= 0x01) ? TempSLng : 0x01;
 	}
-	
+
 	if (! VGMPbRate || ! VGMHead.lngRate)
 	{
 		VGMPbRateMul = 1;
@@ -985,10 +984,10 @@ void PlayVGM(void)
 	TempSLng = gcd(VGMSmplRateMul, VGMSmplRateDiv);
 	VGMSmplRateMul /= TempSLng;
 	VGMSmplRateDiv /= TempSLng;
-	
+
 	PlayingTime = 0;
 	EndPlay = false;
-	
+
 	VGMPos = VGMHead.lngDataOffset;
 	VGMSmplPos = 0;
 	VGMSmplPlayed = 0;
@@ -997,11 +996,11 @@ void PlayVGM(void)
 	PauseSmpls = (PauseTime * SampleRate + 500) / 1000;
 	if (VGMPos >= VGMHead.lngEOFOffset)
 		VGMEnd = true;
-	
+
 #ifdef CONSOLE_MODE
 	memset(CmdList, 0x00, 0x100 * sizeof(UINT8));
 #endif
-	
+
 	if (! PauseEmulate)
 	{
 		switch(PlayingMode)
@@ -1019,10 +1018,10 @@ void PlayVGM(void)
 			break;
 		}
 	}
-	
+
 	Chips_GeneralActions(0x00);	// Start chips
 	// also does Reset (0x01), Muting Mask (0x10) and Panning (0x20)
-	
+
 	if (UseFM)
 	{
 		// TODO: get FirstInit working
@@ -1033,11 +1032,12 @@ void PlayVGM(void)
 		}
 		open_real_fm();
 	}
-	
+
 	switch(PlayingMode)
 	{
 	case 0x00:	// the application controls the playback thread
 		break;
+#ifndef VGM_TEST
 	case 0x01:	// FM Playback needs an independent thread
 		ResetPBTimer = false;
 		if (StartThread())
@@ -1049,10 +1049,11 @@ void PlayVGM(void)
 		PauseStream(true);
 #endif
 		break;
+#endif
 	case 0x02:	// like Mode 0x00, but Hardware is also controlled (not synced)
 		break;
 	}
-	
+
 	Last95Drum = 0xFFFF;
 	Last95Freq = 0;
 	Last95Max = 0xFFFF;
@@ -1060,11 +1061,11 @@ void PlayVGM(void)
 	Interpreting = false;
 	InterpretFile(0);
 	IsVGMInit = false;
-	
+
 	PauseThread = false;
 	AutoStopSkip = true;
 	ForceVGMExec = false;
-	
+
 	return;
 }
 
@@ -1072,17 +1073,17 @@ void StopVGM(void)
 {
 	if (PlayingMode == 0xFF)
 		return;
-	
 	if (! PauseEmulate)
 	{
 		if (UseFM && PausePlay)
 			SetMuteControl(false);
 	}
-	
+
 	switch(PlayingMode)
 	{
 	case 0x00:
 		break;
+#ifndef VGM_TEST
 	case 0x01:
 		StopThread();
 		/*if (SmoothTrackChange)
@@ -1096,15 +1097,15 @@ void StopVGM(void)
 			}
 		}*/
 		break;
+#endif
 	case 0x02:
 		break;
 	}
-	
+
 	Chips_GeneralActions(0x02);	// Stop chips
 	if (UseFM)
 		close_real_fm();
 	PlayingMode = 0xFF;
-	
 	return;
 }
 
@@ -2592,22 +2593,24 @@ static void RestartPlaying(void)
 	PlayingTime = 0;
 #endif
 	PauseThread = OldPThread;
-	
+
 	return;
 }
 
 static void Chips_GeneralActions(UINT8 Mode)
 {
-	UINT32 AbsVol;
+	UINT32 AbsVol = 0;
 	//UINT16 ChipVol;
 	CAUD_ATTR* CAA;
 	CHIP_OPTS* COpt;
 	UINT8 ChipCnt;
 	UINT8 CurChip;
 	UINT8 CurCSet;	// Chip Set
+#ifdef VGM_TODO
 	UINT32 MaskVal;
+#endif
 	UINT32 ChipClk;
-	
+
 	switch(Mode)
 	{
 	case 0x00:	// Start Chips
@@ -2636,21 +2639,22 @@ static void Chips_GeneralActions(UINT8 Mode)
 				CAA->Paired = NULL;
 			}
 		}
-		
-		// Initialize Sound Chips
+
 		AbsVol = 0x00;
+#ifdef VGM_TODO
+		// Initialize Sound Chips
 		if (VGMHead.lngHzPSG)
 		{
 			//ChipVol = UseFM ? 0x00 : 0x80;
 			sn764xx_set_emu_core(ChipOpts[0x00].SN76496.EmuCore);
 			ChipOpts[0x01].SN76496.EmuCore = ChipOpts[0x00].SN76496.EmuCore;
-			
+
 			ChipCnt = (VGMHead.lngHzPSG & 0x40000000) ? 0x02 : 0x01;
 			for (CurChip = 0x00; CurChip < ChipCnt; CurChip ++)
 			{
 				CAA = &ChipAudio[CurChip].SN76496;
 				CAA->ChipType = 0x00;
-				
+
 				ChipClk = GetChipClock(&VGMHead, (CurChip << 7) | CAA->ChipType, NULL);
 				ChipClk &= ~0x80000000;
 				ChipClk |= VGMHead.lngHzPSG & ((CurChip & 0x01) << 31);
@@ -2664,7 +2668,7 @@ static void Chips_GeneralActions(UINT8 Mode)
 														(VGMHead.bytPSG_Flags & 0x08) >> 3,
 														(VGMHead.bytPSG_Flags & 0x01) >> 0);
 					CAA->StreamUpdate = &sn764xx_stream_update;
-					
+
 					CAA->Volume = GetChipVolume(&VGMHead, CAA->ChipType, CurChip, ChipCnt);
 					if (! CurChip || ! (ChipClk & 0x80000000))
 						AbsVol += CAA->Volume;
@@ -2679,7 +2683,7 @@ static void Chips_GeneralActions(UINT8 Mode)
 					open_fm_option(CAA->ChipType, 0x06, (VGMHead.bytPSG_Flags & 0x08) >> 3);
 					open_fm_option(CAA->ChipType, 0x07, (VGMHead.bytPSG_Flags & 0x01) >> 0);
 					setup_real_fm(CAA->ChipType, CurChip);
-					
+
 					CAA->SmpRate = 0x00000000;
 					CAA->Volume = 0x0000;
 				}
@@ -3088,6 +3092,8 @@ static void Chips_GeneralActions(UINT8 Mode)
 				AbsVol += CAA->Volume;
 			}
 		}
+#endif
+#ifdef VGM_AY8910
 		if (VGMHead.lngHzAY8910)
 		{
 			//ChipVol = 0x100;
@@ -3122,6 +3128,8 @@ static void Chips_GeneralActions(UINT8 Mode)
 				}
 			}
 		}
+#endif
+#ifdef VGM_TODO
 		if (VGMHead.lngHzGBDMG)
 		{
 			//ChipVol = 0xC0;
@@ -3362,11 +3370,11 @@ static void Chips_GeneralActions(UINT8 Mode)
 			{
 				CAA = &ChipAudio[CurChip].QSound;
 				CAA->ChipType = 0x1F;
-				
+
 				ChipClk = GetChipClock(&VGMHead, (CurChip << 7) | CAA->ChipType, NULL);
 				CAA->SmpRate = device_start_qsound(CurChip, ChipClk);
 				CAA->StreamUpdate = &qsound_update;
-				
+
 				CAA->Volume = GetChipVolume(&VGMHead, CAA->ChipType, CurChip, ChipCnt);
 				AbsVol += CAA->Volume;
 			}
@@ -3375,18 +3383,18 @@ static void Chips_GeneralActions(UINT8 Mode)
 		{
 			scsp_set_options((UINT8)ChipOpts[0x00].SCSP.SpecialFlags);
 			ChipOpts[0x01].SCSP.SpecialFlags = ChipOpts[0x00].SCSP.SpecialFlags;
-			
+
 			//ChipVol = 0x20;
 			ChipCnt = (VGMHead.lngHzSCSP & 0x40000000) ? 0x02 : 0x01;
 			for (CurChip = 0x00; CurChip < ChipCnt; CurChip ++)
 			{
 				CAA = &ChipAudio[CurChip].SCSP;
 				CAA->ChipType = 0x20;
-				
+
 				ChipClk = GetChipClock(&VGMHead, (CurChip << 7) | CAA->ChipType, NULL);
 				CAA->SmpRate = device_start_scsp(CurChip, ChipClk);
 				CAA->StreamUpdate = &SCSP_Update;
-				
+
 				CAA->Volume = GetChipVolume(&VGMHead, CAA->ChipType, CurChip, ChipCnt);
 				AbsVol += CAA->Volume * 8;
 			}
@@ -3399,11 +3407,11 @@ static void Chips_GeneralActions(UINT8 Mode)
 			{
 				CAA = &ChipAudio[CurChip].WSwan;
 				CAA->ChipType = 0x21;
-				
+
 				ChipClk = GetChipClock(&VGMHead, (CurChip << 7) | CAA->ChipType, NULL);
 				CAA->SmpRate = ws_audio_init(CurChip, ChipClk);
 				CAA->StreamUpdate = &ws_audio_update;
-				
+
 				CAA->Volume = GetChipVolume(&VGMHead, CAA->ChipType, CurChip, ChipCnt);
 				AbsVol += CAA->Volume;
 			}
@@ -3499,18 +3507,18 @@ static void Chips_GeneralActions(UINT8 Mode)
 		{
 			c352_set_options((UINT8)ChipOpts[0x00].C352.SpecialFlags);
 			ChipOpts[0x01].C352.SpecialFlags = ChipOpts[0x00].C352.SpecialFlags;
-			
+
 			//ChipVol = 0x40;
 			ChipCnt = (VGMHead.lngHzC352 & 0x40000000) ? 0x02 : 0x01;
 			for (CurChip = 0x00; CurChip < ChipCnt; CurChip ++)
 			{
 				CAA = &ChipAudio[CurChip].C352;
 				CAA->ChipType = 0x27;
-				
+
 				ChipClk = GetChipClock(&VGMHead, (CurChip << 7) | CAA->ChipType, NULL);
 				CAA->SmpRate = device_start_c352(CurChip, ChipClk, VGMHead.bytC352ClkDiv * 4);
 				CAA->StreamUpdate = &c352_update;
-				
+
 				CAA->Volume = GetChipVolume(&VGMHead, CAA->ChipType, CurChip, ChipCnt);
 				AbsVol += CAA->Volume * 8;
 			}
@@ -3523,16 +3531,17 @@ static void Chips_GeneralActions(UINT8 Mode)
 			{
 				CAA = &ChipAudio[CurChip].GA20;
 				CAA->ChipType = 0x28;
-				
+
 				ChipClk = GetChipClock(&VGMHead, (CurChip << 7) | CAA->ChipType, NULL);
 				CAA->SmpRate = device_start_iremga20(CurChip, ChipClk);
 				CAA->StreamUpdate = &IremGA20_update;
-				
+
 				CAA->Volume = GetChipVolume(&VGMHead, CAA->ChipType, CurChip, ChipCnt);
 				AbsVol += CAA->Volume;
 			}
 		}
-		
+#endif
+
 		// Initialize DAC Control and PCM Bank
 		DacCtrlUsed = 0x00;
 		//memset(DacCtrlUsg, 0x00, 0x01 * 0xFF);
@@ -3592,12 +3601,13 @@ static void Chips_GeneralActions(UINT8 Mode)
 	case 0x01:	// Reset chips
 		for (CurCSet = 0x00; CurCSet < 0x02; CurCSet ++)
 		{
-		
+
 		CAA = (CAUD_ATTR*)&ChipAudio[CurCSet];
 		for (CurChip = 0x00; CurChip < CHIP_COUNT; CurChip ++, CAA ++)
 		{
 			if (CAA->ChipType == 0xFF)	// chip unused
 				continue;
+#ifdef VGM_TODO
 			else if (CAA->ChipType == 0x00 && ! UseFM)
 				device_reset_sn764xx(CurCSet);
 			else if (CAA->ChipType == 0x01 && ! UseFM)
@@ -3655,8 +3665,12 @@ static void Chips_GeneralActions(UINT8 Mode)
 				device_reset_rf5c164(CurCSet);
 			else if (CAA->ChipType == 0x11)
 				device_reset_pwm(CurCSet);
+#endif
+#ifdef VGM_AY8910
 			else if (CAA->ChipType == 0x12 && ! UseFM)
 				device_reset_ayxx(CurCSet);
+#endif
+#ifdef VGM_TODO
 			else if (CAA->ChipType == 0x13)
 				device_reset_gameboy_sound(CurCSet);
 			else if (CAA->ChipType == 0x14)
@@ -3701,13 +3715,14 @@ static void Chips_GeneralActions(UINT8 Mode)
 				device_reset_c352(CurCSet);
 			else if (CAA->ChipType == 0x28)
 				device_reset_iremga20(CurCSet);
+#endif
 		}	// end for CurChip
-		
+
 		}	// end for CurCSet
-		
+
 		Chips_GeneralActions(0x10);	// set muting mask
 		Chips_GeneralActions(0x20);	// set panning
-		
+
 		for (CurChip = 0x00; CurChip < DacCtrlUsed; CurChip ++)
 		{
 			CurCSet = DacCtrlUsg[CurChip];
@@ -3716,7 +3731,7 @@ static void Chips_GeneralActions(UINT8 Mode)
 		}
 		//DacCtrlUsed = 0x00;
 		//memset(DacCtrlUsg, 0x00, 0x01 * 0xFF);
-		
+
 		for (CurChip = 0x00; CurChip < PCM_BANK_COUNT; CurChip ++)
 		{
 			// reset PCM Bank, but not the data
@@ -3729,12 +3744,13 @@ static void Chips_GeneralActions(UINT8 Mode)
 	case 0x02:	// Stop chips
 		for (CurCSet = 0x00; CurCSet < 0x02; CurCSet ++)
 		{
-		
+
 		CAA = (CAUD_ATTR*)&ChipAudio[CurCSet];
 		for (CurChip = 0x00; CurChip < CHIP_COUNT; CurChip ++, CAA ++)
 		{
 			if (CAA->ChipType == 0xFF)	// chip unused
 				continue;
+#ifdef VGM_TODO
 			else if (CAA->ChipType == 0x00 && ! UseFM)
 				device_stop_sn764xx(CurCSet);
 			else if (CAA->ChipType == 0x01 && ! UseFM)
@@ -3771,8 +3787,12 @@ static void Chips_GeneralActions(UINT8 Mode)
 				device_stop_rf5c164(CurCSet);
 			else if (CAA->ChipType == 0x11)
 				device_stop_pwm(CurCSet);
+#endif
+#ifdef VGM_AY8910
 			else if (CAA->ChipType == 0x12 && ! UseFM)
 				device_stop_ayxx(CurCSet);
+#endif
+#ifdef VGM_TODO
 			else if (CAA->ChipType == 0x13)
 				device_stop_gameboy_sound(CurCSet);
 			else if (CAA->ChipType == 0x14)
@@ -3817,12 +3837,13 @@ static void Chips_GeneralActions(UINT8 Mode)
 				device_stop_c352(CurCSet);
 			else if (CAA->ChipType == 0x28)
 				device_stop_iremga20(CurCSet);
-			
+#endif
+
 			CAA->ChipType = 0xFF;	// mark as "unused"
 		}	// end for CurChip
-		
+
 		}	// end for CurCSet
-		
+
 		for (CurChip = 0x00; CurChip < DacCtrlUsed; CurChip ++)
 		{
 			CurCSet = DacCtrlUsg[CurChip];
@@ -3830,7 +3851,7 @@ static void Chips_GeneralActions(UINT8 Mode)
 			DacCtrl[CurCSet].Enable = false;
 		}
 		DacCtrlUsed = 0x00;
-		
+
 		for (CurChip = 0x00; CurChip < PCM_BANK_COUNT; CurChip ++)
 		{
 			free(PCMBank[CurChip].Bank);
@@ -3843,12 +3864,13 @@ static void Chips_GeneralActions(UINT8 Mode)
 	case 0x10:	// Set Muting Mask
 		for (CurCSet = 0x00; CurCSet < 0x02; CurCSet ++)
 		{
-		
+
 		CAA = (CAUD_ATTR*)&ChipAudio[CurCSet];
 		for (CurChip = 0x00; CurChip < CHIP_COUNT; CurChip ++, CAA ++)
 		{
 			if (CAA->ChipType == 0xFF)	// chip unused
 				continue;
+#ifdef VGM_TODO
 			else if (CAA->ChipType == 0x00 && ! UseFM)
 				sn764xx_set_mute_mask(CurCSet, ChipOpts[CurCSet].SN76496.ChnMute1);
 			else if (CAA->ChipType == 0x01 && ! UseFM)
@@ -3895,8 +3917,12 @@ static void Chips_GeneralActions(UINT8 Mode)
 				rf5c164_set_mute_mask(CurCSet, ChipOpts[CurCSet].RF5C164.ChnMute1);
 			else if (CAA->ChipType == 0x11)
 				;	// PWM - nothing to mute
+#endif
+#ifdef VGM_AY8910
 			else if (CAA->ChipType == 0x12 && ! UseFM)
 				ayxx_set_mute_mask(CurCSet, ChipOpts[CurCSet].AY8910.ChnMute1);
+#endif
+#ifdef VGM_TODO
 			else if (CAA->ChipType == 0x13)
 				gameboy_sound_set_mute_mask(CurCSet, ChipOpts[CurCSet].GameBoy.ChnMute1);
 			else if (CAA->ChipType == 0x14)
@@ -3941,29 +3967,32 @@ static void Chips_GeneralActions(UINT8 Mode)
 				c352_set_mute_mask(CurCSet, ChipOpts[CurCSet].C352.ChnMute1);
 			else if (CAA->ChipType == 0x28)
 				iremga20_set_mute_mask(CurCSet, ChipOpts[CurCSet].GA20.ChnMute1);
+#endif
 		}	// end for CurChip
-		
+
 		}	// end for CurCSet
 		break;
 	case 0x20:	// Set Panning
 		for (CurCSet = 0x00; CurCSet < 0x02; CurCSet ++)
 		{
-		
+
 		CAA = (CAUD_ATTR*)&ChipAudio[CurCSet];
 		for (CurChip = 0x00; CurChip < CHIP_COUNT; CurChip ++, CAA ++)
 		{
 			if (CAA->ChipType == 0xFF)	// chip unused
 				continue;
+#ifdef VGM_TODO
 			else if (CAA->ChipType == 0x00 && ! UseFM)
 				sn764xx_set_panning(CurCSet, ChipOpts[CurCSet].SN76496.Panning);
 			else if (CAA->ChipType == 0x01 && ! UseFM)
 				ym2413_set_panning(CurCSet, ChipOpts[CurCSet].YM2413.Panning);
+#endif
 		}	// end for CurChip
-		
+
 		}	// end for CurCSet
 		break;
 	}
-	
+
 	return;
 }
 
@@ -3993,40 +4022,40 @@ static UINT8 StartThread(void)
 	HANDLE PlayThreadHandle;
 	DWORD PlayThreadID;
 	//char TestStr[0x80];
-	
+
 	if (PlayThreadOpen)
 		return 0xD0;	// Thread is already active
-	
+
 	PauseThread = true;
 	ThreadNoWait = false;
 	ThreadPauseConfrm = false;
 	CloseThread = false;
 	ThreadPauseEnable = true;
-	
+
 	PlayThreadHandle = CreateThread(NULL, 0x00, &PlayingThread, NULL, 0x00, &PlayThreadID);
 	if (PlayThreadHandle == NULL)
 		return 0xC8;		// CreateThread failed
 	CloseHandle(PlayThreadHandle);
-	
+
 	PlayThreadOpen = true;
 	//PauseThread = false;	is done after File Init
-	
+
 	return 0x00;
 #else
 	UINT32 RetVal;
-	
+
 	PauseThread = true;
 	ThreadNoWait = false;
 	ThreadPauseConfrm = false;
 	CloseThread = false;
 	ThreadPauseEnable = true;
-	
+
 	RetVal = pthread_create(&hPlayThread, NULL, &PlayingThread, NULL);
 	if (RetVal)
 		return 0xC8;		// CreateThread failed
-	
+
 	PlayThreadOpen = true;
-	
+
 	return 0x00;
 #endif
 }
@@ -4740,12 +4769,12 @@ static void InterpretVGM(UINT32 SampleCount)
 	const UINT8* ROMData;
 	UINT8 CurChip;
 	const UINT8* VGMPnt;
-	
+
 	if (VGMEnd)
 		return;
 	if (PausePlay && ! ForceVGMExec)
 		return;
-	
+
 	SmplPlayed = SamplePbk2VGM_I(VGMSmplPlayed + SampleCount);
 	while(VGMSmplPos <= SmplPlayed)
 	{
@@ -4771,11 +4800,12 @@ static void InterpretVGM(UINT32 SampleCount)
 		else
 		{
 			VGMPnt = &VGMData[VGMPos];
-			
+
 			// Cheat Mode (to use 2 instances of 1 chip)
 			CurChip = 0x00;
 			switch(Command)
 			{
+#ifdef VGM_TODO
 			case 0x30:
 				if (VGMHead.lngHzPSG & 0x40000000)
 				{
@@ -4871,8 +4901,11 @@ static void InterpretVGM(UINT32 SampleCount)
 					CurChip = 0x01;
 				}
 				break;
+#endif
+			default:
+				break;
 			}
-			
+
 			switch(Command)
 			{
 			case 0x66:	// End Of File
@@ -4883,7 +4916,7 @@ static void InterpretVGM(UINT32 SampleCount)
 					VGMSmplPlayed -= SampleVGM2Pbk_I(VGMHead.lngLoopSamples);
 					SmplPlayed = SamplePbk2VGM_I(VGMSmplPlayed + SampleCount);
 					VGMCurLoop ++;
-					
+
 					if (VGMMaxLoopM && VGMCurLoop >= VGMMaxLoopM)
 					{
 #ifndef CONSOLE_MODE
@@ -4909,7 +4942,7 @@ static void InterpretVGM(UINT32 SampleCount)
 #endif
 						VGMHead.lngTotalSamples = VGMSmplPos;
 					}
-					
+
 					if (HardStopOldVGMs)
 					{
 						if (VGMHead.lngVersion < 0x150 ||
@@ -4933,6 +4966,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				VGMSmplPos += TempSht;
 				VGMPos += 0x03;
 				break;
+#ifdef VGM_TODO
 			case 0x50:	// SN76496 write
 				if (CHIP_CHECK(SN76496))
 				{
@@ -4955,6 +4989,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				}
 				VGMPos += 0x03;
 				break;
+#endif
 			case 0x67:	// PCM Data Stream
 				TempByt = VGMPnt[0x02];
 				TempLng = ReadLE32(&VGMPnt[0x03]);
@@ -4963,7 +4998,7 @@ static void InterpretVGM(UINT32 SampleCount)
 					TempLng &= 0x7FFFFFFF;
 					CurChip = 0x01;
 				}
-				
+
 				switch(TempByt & 0xC0)
 				{
 				case 0x00:	// Database Block
@@ -4982,11 +5017,12 @@ static void InterpretVGM(UINT32 SampleCount)
 				case 0x80:	// ROM/RAM Dump
 					if (VGMCurLoop)
 						break;
-					
+
 					ROMSize = ReadLE32(&VGMPnt[0x07]);
 					DataStart = ReadLE32(&VGMPnt[0x0B]);
 					DataLen = TempLng - 0x08;
 					ROMData = &VGMPnt[0x0F];
+#ifdef VGM_TODO
 					switch(TempByt)
 					{
 					case 0x80:	// SegaPCM ROM
@@ -5093,6 +5129,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				//			break;
 				//		break;
 					}
+#endif
 					break;
 				case 0xC0:	// RAM Write
 					if (! (TempByt & 0x20))
@@ -5107,6 +5144,7 @@ static void InterpretVGM(UINT32 SampleCount)
 						DataLen = TempLng - 0x04;
 						ROMData = &VGMPnt[0x0B];
 					}
+#ifdef VGM_TODO
 					switch(TempByt)
 					{
 					case 0xC0:	// RF5C68 RAM Database
@@ -5135,6 +5173,7 @@ static void InterpretVGM(UINT32 SampleCount)
 						es5503_write_ram(CurChip, DataStart, DataLen, ROMData);
 						break;
 					}
+#endif
 					break;
 				}
 				VGMPos += 0x07 + TempLng;
@@ -5160,6 +5199,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				}
 				VGMPos += 0x02;
 				break;
+#ifdef VGM_TODO
 			case 0x54:	// YM2151 write
 				if (CHIP_CHECK(YM2151))
 				{
@@ -5282,6 +5322,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				}
 				VGMPos += 0x04;
 				break;
+#endif
 			case 0xB2:	// PWM channel write
 				if (CHIP_CHECK(PWM))
 				{
@@ -5293,7 +5334,7 @@ static void InterpretVGM(UINT32 SampleCount)
 			case 0x68:	// PCM RAM write
 				CurChip = (VGMPnt[0x02] & 0x80) >> 7;
 				TempByt =  VGMPnt[0x02] & 0x7F;
-				
+
 				DataStart = ReadLE24(&VGMPnt[0x03]);
 				TempLng = ReadLE24(&VGMPnt[0x06]);
 				DataLen = ReadLE24(&VGMPnt[0x09]);
@@ -5305,7 +5346,8 @@ static void InterpretVGM(UINT32 SampleCount)
 					VGMPos += 0x0C;
 					break;
 				}
-				
+
+#ifdef VGM_TODO
 				switch(TempByt)
 				{
 				case 0x01:
@@ -5331,8 +5373,10 @@ static void InterpretVGM(UINT32 SampleCount)
 					nes_write_ram(CurChip, TempLng, DataLen, ROMData);
 					break;
 				}
+#endif
 				VGMPos += 0x0C;
 				break;
+#ifdef VGM_AY8910
 			case 0xA0:	// AY8910 write
 				CurChip = (VGMPnt[0x01] & 0x80) >> 7;
 				if (CHIP_CHECK(AY8910))
@@ -5341,6 +5385,8 @@ static void InterpretVGM(UINT32 SampleCount)
 				}
 				VGMPos += 0x03;
 				break;
+#endif
+#ifdef VGM_TODO
 			case 0xB3:	// GameBoy DMG write
 				CurChip = (VGMPnt[0x01] & 0x80) >> 7;
 				if (CHIP_CHECK(GameBoy))
@@ -5565,6 +5611,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				}
 				VGMPos += 0x03;
 				break;
+#endif // VGM_TODO
 			case 0x90:	// DAC Ctrl: Setup Chip
 				CurChip = VGMPnt[0x01];
 				if (CurChip == 0xFF)
@@ -5595,7 +5642,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				DacCtrl[CurChip].Bank = VGMPnt[0x02];
 				if (DacCtrl[CurChip].Bank >= PCM_BANK_COUNT)
 					DacCtrl[CurChip].Bank = 0x00;
-				
+
 				TempPCM = &PCMBank[DacCtrl[CurChip].Bank];
 				Last95Max = TempPCM->BankCount;
 				daccontrol_set_data(CurChip, TempPCM->Data, TempPCM->DataSize,
@@ -5663,7 +5710,7 @@ static void InterpretVGM(UINT32 SampleCount)
 				if (TempSht >= TempPCM->BankCount)
 					TempSht = 0x00;
 				TempBnk = &TempPCM->Bank[TempSht];
-				
+
 				TempByt = DCTRL_LMODE_BYTES |
 							(VGMPnt[0x04] & 0x10) |			// Reverse Mode
 							((VGMPnt[0x04] & 0x01) << 7);	// Looping
@@ -5678,7 +5725,7 @@ static void InterpretVGM(UINT32 SampleCount)
 					CmdList[Command] = true;
 				}
 #endif
-				
+
 				switch(Command & 0xF0)
 				{
 				case 0x00:
@@ -5711,14 +5758,14 @@ static void InterpretVGM(UINT32 SampleCount)
 				break;
 			}
 		}
-		
+
 		if (VGMPos >= VGMHead.lngEOFOffset)
 			VGMEnd = true;
-		
+
 		if (VGMEnd)
 			break;
 	}
-	
+
 	return;
 }
 
@@ -5733,11 +5780,11 @@ static void GeneralChipLists(void)
 	UINT8 CurChip;
 	UINT8 CurCSet;
 	CAUD_ATTR* CAA;
-	
+
 	ChipListAll = NULL;
 	ChipListPause = NULL;
 	//ChipListOpt = NULL;
-	
+
 	// generate list of all chips that are used in the current VGM
 	CurBufIdx = 0x00;
 	CLstOld = NULL;

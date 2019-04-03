@@ -551,6 +551,7 @@ void chip_reg_write(UINT8 ChipType, UINT8 ChipID,
 #endif	// DISABLE_HW_SUPPORT
 		switch(ChipType)
 		{
+#ifdef VGM_TODO
 		case 0x00:	// SN76496
 			sn764xx_w(ChipID, Port, Data);
 			break;
@@ -617,10 +618,14 @@ void chip_reg_write(UINT8 ChipType, UINT8 ChipID,
 		case 0x11:	// PWM
 			pwm_chn_w(ChipID, Port, (Offset << 8) | (Data << 0));
 			break;
+#endif
+#ifdef VGM_AY8910
 		case 0x12:	// AY8910
 			ayxx_w(ChipID, 0x00, Offset);
 			ayxx_w(ChipID, 0x01, Data);
 			break;
+#endif
+#ifdef VGM_TODO
 		case 0x13:	// GameBoy
 			gb_sound_w(ChipID, Offset, Data);
 			break;
@@ -693,6 +698,9 @@ void chip_reg_write(UINT8 ChipType, UINT8 ChipID,
 			break;
 		case 0x28:	// GA20
 			irem_ga20_w(ChipID, Offset, Data);
+			break;
+#endif
+		default:
 			break;
 //		case 0x##:	// OKIM6376
 //			break;

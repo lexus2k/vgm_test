@@ -230,7 +230,7 @@ struct _ay8910_context
 	UINT32 MuteMsk[NUM_CHANNELS];
 	UINT8 chip_type;
 	UINT8 IsDisabled;
-	
+
 	SRATE_CALLBACK SmpRateFunc;
 	void* SmpRateData;
 };
