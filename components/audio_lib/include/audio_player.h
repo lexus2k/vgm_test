@@ -26,5 +26,9 @@ private:
     uint8_t* m_buffer = nullptr;
     uint8_t* m_write_pos = nullptr;
     uint8_t* m_player_pos = nullptr;
-    bool m_end_detected = false;
+    int m_size;
+
+    int reset_player();
+    int decode_data();
+    int play_data();
 };

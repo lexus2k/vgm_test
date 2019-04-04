@@ -8,6 +8,7 @@
 #include "driver/i2s.h"
 #include "esp_adc_cal.h"
 
+//#define I2S_DEBUG
 //static uint32_t m_frequency = 8000;
 static uint32_t m_frequency = 16000;
 void AudioI2S::set_frequency(uint32_t frequency)
@@ -25,7 +26,7 @@ void AudioI2S::begin()
     i2s_config.communication_format = static_cast<i2s_comm_format_t>(I2S_COMM_FORMAT_I2S_MSB);
     i2s_config.intr_alloc_flags = 0; //ESP_INTR_FLAG_LEVEL1;
     i2s_config.dma_buf_count = 8;
-    i2s_config.dma_buf_len = 128;
+    i2s_config.dma_buf_len = 256;
     i2s_config.use_apll = false;
     esp_err_t err = i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
     if (err != ESP_OK)
@@ -47,11 +48,14 @@ int AudioI2S::write(uint8_t* buffer, int len)
     }
     else
     {
-        esp_err_t err = i2s_write(I2S_NUM_0, buffer, len, &written, portMAX_DELAY);
+        esp_err_t err = i2s_write(I2S_NUM_0, buffer, len, &written, 0); //portMAX_DELAY);
         if (err != ESP_OK)
         {
             return -1;
         }
+#ifdef I2S_DEBUG
+        printf("i2c: %u\n", written);
+#endif
     }
     return written;
 }
