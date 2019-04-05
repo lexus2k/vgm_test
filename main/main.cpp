@@ -31,25 +31,21 @@ static const uint8_t *melodies[][2] =
     { test5_vgm_start, test5_vgm_end },
 };
 
-//    audio_player.play( &melodyMonkeyIslandP );
-
 static void main_task(void *pvParameter)
 {
     int index = 0;
+    /* set prebuffering in milliseconds. It is require, when thread sleeps */
     audio_player.set_prebuffering( 50 );
     audio_player.begin();
-//    audio_player.play_vgm( test3_vgm_start, test3_vgm_end - test3_vgm_start );
-    audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
     for(;;)
     {
         if ( !audio_player.update() )
         {
-            index++; if ( index > 4 ) index = 0;
             audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
+            index++; if ( index > 4 ) index = 0;
             audio_player.update();
         }
         vTaskDelay(50 / portTICK_PERIOD_MS);
-//        esp_task_wdt_reset();
     }
 
     audio_player.end();
