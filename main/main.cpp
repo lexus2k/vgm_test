@@ -10,7 +10,7 @@
 #include "driver/adc.h"
 #include "esp_task_wdt.h"
 
-AudioPlayer audio_player;
+AudioPlayer audio_player( 16000 );
 extern const uint8_t test_vgm_start[] asm("_binary_test_vgm_start");
 extern const uint8_t test_vgm_end[]   asm("_binary_test_vgm_end");
 
@@ -24,12 +24,13 @@ void buttons_start_audio(void)
 
 static void main_task(void *pvParameter)
 {
+    audio_player.set_prebuffering( 50 );
     audio_player.begin();
     audio_player.playVGM( test_vgm_start, test_vgm_end - test_vgm_start );
     for(;;)
     {
         audio_player.update();
-        vTaskDelay(3);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
 //        esp_task_wdt_reset();
     }
 
