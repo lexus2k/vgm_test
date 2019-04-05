@@ -1,20 +1,67 @@
 #include "audio_player.h"
+#ifdef USE_GME_DECODER
 #include "audio_gme_decoder.h"
+#elif defined(USE_VGM_DECODER)
+#include "audio_vgm_decoder.h"
+#endif
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/i2s.h"
+#include "esp_adc_cal.h"
 #include <stdio.h>
 #include <string.h>
 
 //#define AUDIO_PLAYER_DEBUG
 
+static int write_i2s_data(uint8_t *buffer, int len)
+{
+    size_t written = 0;
+    if ( buffer == nullptr )
+    {
+        i2s_zero_dma_buffer( I2S_NUM_0 );
+    }
+    else
+    {
+        esp_err_t err = i2s_write(I2S_NUM_0, buffer, len, &written, 0); //portMAX_DELAY);
+        if (err != ESP_OK)
+        {
+            return -1;
+        }
+#ifdef I2S_DEBUG
+        printf("i2c: %u\n", written);
+#endif
+    }
+    return written;
+}
+
 AudioPlayer::AudioPlayer(uint32_t frequency)
-   : m_output( frequency )
-   , m_frequency( frequency )
+   : m_frequency( frequency )
 {
     set_prebuffering( 20 );
 }
 
 void AudioPlayer::begin()
 {
-    m_output.begin();
+    i2s_config_t i2s_config{};
+    i2s_config.mode = static_cast<i2s_mode_t>(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN);
+    i2s_config.sample_rate = m_frequency;
+    i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
+    i2s_config.channel_format = I2S_CHANNEL_FMT_ALL_RIGHT;
+    i2s_config.communication_format = static_cast<i2s_comm_format_t>(I2S_COMM_FORMAT_I2S_MSB);
+    i2s_config.intr_alloc_flags = 0; //ESP_INTR_FLAG_LEVEL1;
+    i2s_config.dma_buf_count = 8;
+    i2s_config.dma_buf_len = m_i2s_buffer_size / 8;
+    i2s_config.use_apll = false;
+    esp_err_t err = i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
+    if (err != ESP_OK)
+    {
+        printf("error: %i\n", err);
+    }
+//    i2s_set_pin(I2S_NUM_0, NULL);
+    i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN);
+    i2s_set_sample_rates(I2S_NUM_0, m_frequency);
+    i2s_zero_dma_buffer( I2S_NUM_0 );
 }
 
 void AudioPlayer::end()
@@ -24,17 +71,18 @@ void AudioPlayer::end()
         free(m_buffer);
         m_buffer = nullptr;
     }
-    m_output.end();
+    i2s_driver_uninstall(I2S_NUM_0);
 }
 
 void AudioPlayer::set_prebuffering(int prebuffering_ms)
 {
-    m_output.set_prebuffering( prebuffering_ms );
     uint32_t bytes = m_frequency * prebuffering_ms / 1000 * 2 * 2;
     int i=5;
     while ( bytes > (1<<i) ) i++;
+    // At least we need i2s buffer to hold audio data for preburreing_ms period
+    m_i2s_buffer_size = 1<<i;
     // We do not need large buffer for decoder
-    m_max_buffer_size = 1<<(i - 1);
+    m_decoder_buffer_size = m_i2s_buffer_size / 2;
 }
 
 void AudioPlayer::play(const NixieMelody* melody)
@@ -51,17 +99,25 @@ void AudioPlayer::play(const NixieMelody* melody)
     reset_player();
 }
 
-void AudioPlayer::playVGM(const uint8_t *buffer, int size)
+void AudioPlayer::play_vgm(const uint8_t *buffer, int size)
 {
     if (m_decoder != nullptr)
     {
         delete m_decoder;
     }
+#if   defined(USE_GME_DECODER)
     AudioGmeDecoder* decoder = new AudioGmeDecoder();
+#elif defined(USE_VGM_DECODER)
+    AudioVgmDecoder* decoder = new AudioVgmDecoder();
+#endif
+    m_decoder = decoder;
+    if (m_decoder == nullptr )
+    {
+        return;
+    }
     // TODO get format from m_output
     decoder->set_format( m_frequency, 16 );
     decoder->set_melody( buffer, size );
-    m_decoder = decoder;
     reset_player();
 }
 
@@ -72,7 +128,7 @@ int AudioPlayer::reset_player()
         free( m_buffer );
         m_buffer = nullptr;
     }
-    m_buffer = static_cast<uint8_t*>(malloc(m_max_buffer_size));
+    m_buffer = static_cast<uint8_t*>(malloc(m_decoder_buffer_size));
     m_write_pos = m_buffer;
     m_player_pos = m_buffer;
     m_size = 0;
@@ -81,8 +137,8 @@ int AudioPlayer::reset_player()
 
 int AudioPlayer::decode_data()
 {
-    uint8_t *end = m_buffer + m_max_buffer_size;
-    int size = m_max_buffer_size - m_size;
+    uint8_t *end = m_buffer + m_decoder_buffer_size;
+    int size = m_decoder_buffer_size - m_size;
     if ( size > end - m_write_pos )
     {
         size = end - m_write_pos;
@@ -105,7 +161,7 @@ int AudioPlayer::decode_data()
 
 int AudioPlayer::play_data()
 {
-    uint8_t *end = m_buffer + m_max_buffer_size;
+    uint8_t *end = m_buffer + m_decoder_buffer_size;
     int size = m_size;
     if ( size > end - m_player_pos )
     {
@@ -115,7 +171,7 @@ int AudioPlayer::play_data()
     {
         return 0;
     }
-    int written = m_output.write(m_player_pos, size);
+    int written = write_i2s_data( m_player_pos, size );
     if (written >= 0)
     {
         m_player_pos += written;
@@ -162,9 +218,13 @@ bool AudioPlayer::update()
     if ( m_size == 0 )
     {
         // to clear i2s dma buffer
-        m_output.write( nullptr, 0 );
+        write_i2s_data( nullptr, 0 );
         delete m_decoder;
         m_decoder = nullptr;
+        if ( m_on_play_complete )
+        {
+            m_on_play_complete();
+        }
         return false;
     }
     return true;

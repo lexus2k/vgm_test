@@ -11,4 +11,4 @@
 COMPONENT_ADD_INCLUDEDIRS := .
 COMPONENT_SRCDIRS := .
 # COMPONENT_EMBED_TXTFILES := html/index.html html/debug.html html/styles.css
-COMPONENT_EMBED_FILES := test.vgm
+COMPONENT_EMBED_FILES := test1.vgm test2.vgm test3.vgm test4.vgm test5.vgm
