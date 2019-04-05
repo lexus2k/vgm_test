@@ -7,7 +7,7 @@
 class AudioPlayer
 {
 public:
-    AudioPlayer() = default;
+    AudioPlayer(uint32_t frequency = 16000);
     ~AudioPlayer() = default;
 
     void play(const NixieMelody* melody);
@@ -18,12 +18,14 @@ public:
      * Return false, when nothing is played
      */
     bool update();
+    void set_prebuffering(int prebuffering_ms);
 
 private:
     AudioI2S m_output;
     AudioDecoder* m_decoder = nullptr;
     uint32_t m_frequency = 16000;
     uint8_t* m_buffer = nullptr;
+    uint32_t m_max_buffer_size = 4096;
     uint8_t* m_write_pos = nullptr;
     uint8_t* m_player_pos = nullptr;
     int m_size;

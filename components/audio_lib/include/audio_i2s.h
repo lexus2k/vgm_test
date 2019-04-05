@@ -9,10 +9,14 @@
 class AudioI2S
 {
 public:
-    AudioI2S() = default;
+    AudioI2S(uint32_t frequency);
     ~AudioI2S() = default;
 
     void set_frequency(uint32_t frequency);
+    /**
+     * Returns ms prebuffered by output layer
+     */
+    int set_prebuffering(int prebuffering_ms);
 
     void begin();
     /**
@@ -20,5 +24,9 @@ public:
      */
     int write(uint8_t* buffer, int len);
     void end();
+
+private:
+    uint32_t m_frequency;
+    uint32_t m_buffer_size = 512;
 };
 

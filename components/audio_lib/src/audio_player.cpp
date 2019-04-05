@@ -3,13 +3,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#define BUFFER_SIZE 8192
-
 //#define AUDIO_PLAYER_DEBUG
+
+AudioPlayer::AudioPlayer(uint32_t frequency)
+   : m_output( frequency )
+   , m_frequency( frequency )
+{
+    set_prebuffering( 20 );
+}
 
 void AudioPlayer::begin()
 {
-    m_output.set_frequency( m_frequency );
     m_output.begin();
 }
 
@@ -21,6 +25,16 @@ void AudioPlayer::end()
         m_buffer = nullptr;
     }
     m_output.end();
+}
+
+void AudioPlayer::set_prebuffering(int prebuffering_ms)
+{
+    m_output.set_prebuffering( prebuffering_ms );
+    uint32_t bytes = m_frequency * prebuffering_ms / 1000 * 2 * 2;
+    int i=5;
+    while ( bytes > (1<<i) ) i++;
+    // We do not need large buffer for decoder
+    m_max_buffer_size = 1<<(i - 1);
 }
 
 void AudioPlayer::play(const NixieMelody* melody)
@@ -53,10 +67,12 @@ void AudioPlayer::playVGM(const uint8_t *buffer, int size)
 
 int AudioPlayer::reset_player()
 {
-    if (m_buffer == nullptr)
+    if (m_buffer != nullptr)
     {
-        m_buffer = static_cast<uint8_t*>(malloc(BUFFER_SIZE));
+        free( m_buffer );
+        m_buffer = nullptr;
     }
+    m_buffer = static_cast<uint8_t*>(malloc(m_max_buffer_size));
     m_write_pos = m_buffer;
     m_player_pos = m_buffer;
     m_size = 0;
@@ -65,14 +81,12 @@ int AudioPlayer::reset_player()
 
 int AudioPlayer::decode_data()
 {
-    uint8_t *end = m_buffer + BUFFER_SIZE;
-    int size = BUFFER_SIZE - m_size;
+    uint8_t *end = m_buffer + m_max_buffer_size;
+    int size = m_max_buffer_size - m_size;
     if ( size > end - m_write_pos )
     {
         size = end - m_write_pos;
     }
-    size = (size >> 2) << 2;
-    if ( size > BUFFER_SIZE / 2) size = BUFFER_SIZE / 2;
     if ( size )
     {
         size = m_decoder->decode( m_write_pos, size );
@@ -91,7 +105,7 @@ int AudioPlayer::decode_data()
 
 int AudioPlayer::play_data()
 {
-    uint8_t *end = m_buffer + BUFFER_SIZE;
+    uint8_t *end = m_buffer + m_max_buffer_size;
     int size = m_size;
     if ( size > end - m_player_pos )
     {
@@ -127,22 +141,30 @@ bool AudioPlayer::update()
     {
         return false;
     }
-    int result;
+    int played = 0, decoded = 0;
     do
     {
-        result = play_data();
-    } while (result > 0);
-    if ( result < 0 )
-    {
-        return false;
-    }
-    while (decode_data() > 0)
-    {
-    }
+        played = play_data();
+        if ( played < 0 )
+        {
+            delete m_decoder;
+            m_decoder = nullptr;
+            return false;
+        }
+        decoded = decode_data();
+        if ( decoded < 0 )
+        {
+            delete m_decoder;
+            m_decoder = nullptr;
+            return false;
+        }
+    } while ( played > 0 || decoded > 0 );
     if ( m_size == 0 )
     {
         // to clear i2s dma buffer
         m_output.write( nullptr, 0 );
+        delete m_decoder;
+        m_decoder = nullptr;
         return false;
     }
     return true;

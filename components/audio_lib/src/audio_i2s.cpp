@@ -9,11 +9,26 @@
 #include "esp_adc_cal.h"
 
 //#define I2S_DEBUG
-//static uint32_t m_frequency = 8000;
-static uint32_t m_frequency = 16000;
+
+AudioI2S::AudioI2S(uint32_t frequency)
+    : m_frequency( frequency )
+{
+}
+
 void AudioI2S::set_frequency(uint32_t frequency)
 {
     m_frequency = frequency;
+}
+
+int AudioI2S::set_prebuffering(int prebuffering_ms)
+{
+    // 1920 for 16kHz
+    // 8 * 2056 = 2048
+    uint32_t bytes = m_frequency * prebuffering_ms / 1000 * 2 * 2;
+    int i=5;
+    while ( bytes > (1<<i) ) i++;
+    m_buffer_size = 1<<i;
+    return prebuffering_ms;
 }
 
 void AudioI2S::begin()
@@ -26,7 +41,7 @@ void AudioI2S::begin()
     i2s_config.communication_format = static_cast<i2s_comm_format_t>(I2S_COMM_FORMAT_I2S_MSB);
     i2s_config.intr_alloc_flags = 0; //ESP_INTR_FLAG_LEVEL1;
     i2s_config.dma_buf_count = 8;
-    i2s_config.dma_buf_len = 256;
+    i2s_config.dma_buf_len = m_buffer_size / 8;
     i2s_config.use_apll = false;
     esp_err_t err = i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
     if (err != ESP_OK)

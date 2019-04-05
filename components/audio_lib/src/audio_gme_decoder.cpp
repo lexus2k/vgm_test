@@ -10,10 +10,25 @@ extern "C" int vgm_set_format(uint32_t frequency);
 
 #if 1
 
+AudioGmeDecoder::~AudioGmeDecoder()
+{
+    if ( m_started )
+    {
+        vgm_play_stop();
+        m_started = false;
+    }
+}
+
 void AudioGmeDecoder::set_melody( const uint8_t *buffer, int size )
 {
+    if ( m_started )
+    {
+        vgm_play_stop();
+        m_started = false;
+    }
     vgm_set_format(m_rate);
     vgm_play_start(buffer, size);
+    m_started = true;
 }
 
 void AudioGmeDecoder::set_format(uint32_t rate, uint8_t bps)
@@ -28,6 +43,7 @@ int AudioGmeDecoder::decode(uint8_t* origin_buffer, int max_size)
     if ( size == 0 )
     {
         vgm_play_stop();
+        m_started = false;
     }
     return size;
 }
