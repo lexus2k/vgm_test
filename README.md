@@ -36,15 +36,15 @@ Connect low-power speaker or amplifier to GPIO25.
 
 *ESP32-IDF*
   * How to get project
-> git submodule update --init --recursive
-> git clone --recursive
+> git clone --recursive https://github.com/lexus2k/vgm_test
+> git submodule update --init --recursive<br>
 
   * Recommended ESP32 IDF version
 > git clone -b v3.2-beta1 --recursive https://github.com/espressif/esp-idf.git esp-idf<br>
 
 ## License
 
-The library is free. If this project helps you, you can give me a cup of coffee.
+The program is free. If this project helps you, you can give me a cup of coffee.
 [![Donate via Paypal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/lexus2k)
 
 
