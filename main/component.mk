@@ -1,12 +1,20 @@
 #
-# "main" pseudo-component makefile.
+#    This file is part of I2S demo player for ESP32.
+#    Copyright (C) 2019  Alexey Dynda.
 #
-# (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
-
-# COMPONENT_EMBED_FILES := server_root_cert.pem
-# COMPONENT_EMBED_TXTFILES.
-# extern const uint8_t server_root_cert_pem_start[] asm("_binary_server_root_cert_pem_start");
-# extern const uint8_t server_root_cert_pem_end[]   asm("_binary_server_root_cert_pem_end");
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 COMPONENT_ADD_INCLUDEDIRS := .
 COMPONENT_SRCDIRS := .

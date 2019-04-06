@@ -1,28 +1,24 @@
 #
-# This is a project Makefile. It is assumed the directory this Makefile resides in is a
-# project subdirectory.
+#    This file is part of I2S demo player for ESP32.
+#    Copyright (C) 2019  Alexey Dynda.
 #
-
-# OVERRIDE_IDF_VER ?= "v3.1.2"
-# OVERRIDE_IDF_VER ?= "v3.2-beta1"
-
-ifeq ($(OVERRIDE_IDF_VER),"v3.1.2")
-    export IDF_PATH:=~/esp/esp-idf-v3.1.2
-    CPPFLAGS += -DIDF_VERSION=030102
-else ifeq ($(OVERRIDE_IDF_VER),"v3.3-beta1")
-    export IDF_PATH:=~/esp/esp-idf-v3.3-beta1
-    CPPFLAGS += -DIDF_VERSION=030300
-else ifeq ($(OVERRIDE_IDF_VER),"v3.2-beta1")
-    export IDF_PATH:=~/esp/esp-idf-v3.2-beta1
-    CPPFLAGS += -DIDF_VERSION=030200
-else
-    CPPFLAGS += -DIDF_VERSION=030200
-endif
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 PROJECT_VER = "v0.1"
 PROJECT_NAME := vgm_test
 EXTRA_COMPONENT_DIRS := ./components
-# COMPONENTS=freertos esp32 newlib esptool_py nvs_flash spi_flash log tcpip_adapter lwip main xtensa-debug-module driver bt
 
 include $(IDF_PATH)/make/project.mk
 
