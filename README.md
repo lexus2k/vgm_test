@@ -19,6 +19,8 @@ This is proof of concept of VGM music player for ESP32. This project uses code f
  * [audio player for esp32](https://github.com/lexus2k/audioplayer_esp32)
  * [Vampire Killer game vgm music files](https://vgmrips.net/packs/pack/vampire-killer-msx2)
 
+Watch demo video on youtube: [![Watch video](https://i.ytimg.com/vi/IBphdzlyeGA/hqdefault.jpg?sqp=-oaymwEjCPYBEIoBSFryq4qpAxUIARUAAAAAGAElAADIQj0AgKJDeAE=&rs=AOn4CLDMWl_P9x6T7LP27aVnZsDUyeCIfQ)](https://youtu.be/IBphdzlyeGA)
+
 ## Key Features
 
  * Can support different formats (extendable).
