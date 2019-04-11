@@ -1,7 +1,6 @@
 /*
-    Copyright (C) 2016-2018 Alexey Dynda
-
-    This file is part of Nixie Library.
+    This file is part of I2S audio player for ESP32.
+    Copyright (C) 2016-2019  Alexey Dynda.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
