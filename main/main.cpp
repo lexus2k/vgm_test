@@ -55,6 +55,7 @@ static void main_task(void *pvParameter)
     /* set prebuffering in milliseconds. It is require, when thread sleeps */
     audio_player.set_prebuffering( 50 );
     audio_player.begin();
+//    audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
     for(;;)
     {
         if ( !audio_player.update() )
