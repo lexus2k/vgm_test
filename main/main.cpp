@@ -27,6 +27,7 @@
 #include "driver/ledc.h"
 #include "driver/adc.h"
 #include "esp_task_wdt.h"
+#include "nixie_melodies.h"
 
 AudioPlayer audio_player( 16000 );
 extern const uint8_t test1_vgm_start[] asm("_binary_test1_vgm_start");
@@ -56,6 +57,7 @@ static void main_task(void *pvParameter)
     audio_player.set_prebuffering( 50 );
     audio_player.begin();
 //    audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
+//    audio_player.play( &melodyMonkeyIslandP );
     for(;;)
     {
         if ( !audio_player.update() )
