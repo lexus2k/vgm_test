@@ -74,6 +74,7 @@ bool ErrorHappened;   // used by VGMPlay.c and VGMPlay_AddFmts.c
 #endif
 extern VGM_HEADER VGMHead;
 extern UINT32 SampleRate;
+extern float VolumeLevel;
 extern UINT32 VGMMaxLoopM;
 extern UINT32 FadeTime;
 extern bool EndPlay;
@@ -82,6 +83,12 @@ extern char *AppPaths[8];
 int vgm_set_format(uint32_t frequency)
 {
 	SampleRate = frequency;
+	return 0;
+}
+
+int vgm_set_volume(float volume)
+{
+	VolumeLevel = volume;
 	return 0;
 }
 

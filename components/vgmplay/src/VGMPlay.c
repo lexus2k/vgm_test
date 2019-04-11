@@ -304,7 +304,7 @@ extern UINT32 CMFMaxLoop;
 UINT32 FadeTime;
 UINT32 PauseTime;	// current Pause Time
 
-float VolumeLevel;
+float VolumeLevel = 0;
 bool SurroundSound;
 UINT8 HardStopOldVGMs;
 bool FadeRAWLog;
@@ -445,7 +445,10 @@ void VGMPlay_Init(void)
 
 	HardStopOldVGMs = 0x00;
 	FadeRAWLog = false;
-	VolumeLevel = 1.0f;
+	if ( VolumeLevel == 0 )
+	{
+		VolumeLevel = 1.0f;
+	}
 	//FullBufFill = false;
 	FMPort = 0x0000;
 	FMForce = false;
