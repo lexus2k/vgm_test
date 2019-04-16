@@ -1,0 +1,3 @@
+[submodule "components/vgmplay"]
+	path = components/vgmplay
+	url = https://github.com/lexus2k/vgmplay_esp32
