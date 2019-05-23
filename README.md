@@ -46,11 +46,8 @@ Connect low-power speaker or amplifier to GPIO25.
 
 ## License
 
-The program is free. If this project helps you, you can give me a cup of coffee.
+If this project helps you, you can give me a cup of coffee.
 [![Donate via Paypal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/lexus2k)
-
-
-Copyright (C) 2019  Alexey Dynda.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
