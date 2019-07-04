@@ -57,12 +57,14 @@ static void main_task(void *pvParameter)
     audio_player.set_prebuffering( 50 );
     audio_player.begin();
 //    audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
-//    audio_player.play( &melodyMonkeyIslandP );
+    audio_player.play( &melodyMonkeyIslandP );
+    audio_player.set_volume( 0.3f );
     for(;;)
     {
         if ( !audio_player.update() )
         {
             audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
+            audio_player.set_volume( 3.5f );
             index++; if ( index > 4 ) index = 0;
             audio_player.update();
         }
