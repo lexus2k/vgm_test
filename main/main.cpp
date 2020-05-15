@@ -1,6 +1,6 @@
 /*
     This file is part of I2S demo player for ESP32.
-    Copyright (C) 2019  Alexey Dynda.
+    Copyright (C) 2019-2020  Alexey Dynda.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include "esp_task_wdt.h"
 #include "nixie_melodies.h"
 
-AudioPlayer audio_player( 16000 );
+AudioPlayer audio_player( 44100 );
 extern const uint8_t test1_vgm_start[] asm("_binary_test1_vgm_start");
 extern const uint8_t test1_vgm_end[]   asm("_binary_test1_vgm_end");
 extern const uint8_t test2_vgm_start[] asm("_binary_test2_vgm_start");
@@ -40,6 +40,10 @@ extern const uint8_t test4_vgm_start[] asm("_binary_test4_vgm_start");
 extern const uint8_t test4_vgm_end[]   asm("_binary_test4_vgm_end");
 extern const uint8_t test5_vgm_start[] asm("_binary_test5_vgm_start");
 extern const uint8_t test5_vgm_end[]   asm("_binary_test5_vgm_end");
+extern const uint8_t test6_vgm_start[] asm("_binary_test6_vgm_start");
+extern const uint8_t test6_vgm_end[]   asm("_binary_test6_vgm_end");
+extern const uint8_t test7_nsf_start[] asm("_binary_test7_nsf_start");
+extern const uint8_t test7_nsf_end[]   asm("_binary_test7_nsf_end");
 
 static const uint8_t *melodies[][2] =
 {
@@ -48,24 +52,40 @@ static const uint8_t *melodies[][2] =
     { test3_vgm_start, test3_vgm_end },
     { test4_vgm_start, test4_vgm_end },
     { test5_vgm_start, test5_vgm_end },
+    { test6_vgm_start, test6_vgm_end },
+    { test7_nsf_start, test7_nsf_end },
 };
+
+
+static void play_track( int index )
+{
+    NixieMelody melody =
+    {
+        .notes = melodies[index][0], \
+        .data_len = static_cast<uint32_t>(melodies[index][1] - melodies[index][0]), \
+        .type = MELODY_TYPE_NSF, \
+        .pause = 0, \
+        .track = 0, \
+        .duration = 360000, \
+        .customData = 0, \
+        .name = nullptr,
+    };
+    audio_player.play( &melody );
+}
 
 static void main_task(void *pvParameter)
 {
     int index = 0;
     /* set prebuffering in milliseconds. It is require, when thread sleeps */
-    audio_player.set_prebuffering( 50 );
+    audio_player.set_prebuffering( 30 );
     audio_player.begin();
-//    audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
-    audio_player.play( &melodyMonkeyIslandP );
-    audio_player.set_volume( 0.3f );
     for(;;)
     {
         if ( !audio_player.update() )
         {
-            audio_player.play_vgm( melodies[index][0], melodies[index][1] - melodies[index][0] );
+            play_track( index );
             audio_player.set_volume( 3.5f );
-            index++; if ( index > 4 ) index = 0;
+            index++; if ( index > 6 ) index = 0;
             audio_player.update();
         }
         vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -78,7 +98,7 @@ static void main_task(void *pvParameter)
 
 extern "C" void app_main()
 {
-    xTaskCreate(&main_task, "main_task", 4096 /* 4096 */, NULL, 5, NULL);
+    xTaskCreate(&main_task, "main_task", 4096, NULL, 5, NULL);
     for(;;)
     {
         esp_task_wdt_reset();
