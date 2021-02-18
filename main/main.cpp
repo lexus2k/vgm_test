@@ -84,7 +84,7 @@ static void main_task(void *pvParameter)
         if ( !audio_player.update() )
         {
             play_track( index );
-            audio_player.set_volume( 3.5f );
+            audio_player.set_volume( 1.8f );
             index++; if ( index > 6 ) index = 0;
             audio_player.update();
         }
